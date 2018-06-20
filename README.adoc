@@ -1,0 +1,258 @@
+= Spring Cloud Data Flow App Tool
+
+== What is this?
+Use this tool to import selected pre-built stream and task app jars to a local Spring boot `scdf-app-repo` project tree
+which you build and deploy to provide an http app repository on the local network that Data Flow can use to register and
+deploy stream and task apps without requiring an access to an external Maven repository.
+
+== Why would you use this?
+The pre-built jars are updated in conjunction with Spring Cloud Data Flow releases and published to the
+https://repo.spring.io[Spring Maven Repository]. While the Spring Cloud deployers used by Data Flow load jars directly
+from this repository by default, Data Flow users frequently must deploy these apps to an environment that is behind a
+firewall, either requiring a Maven proxy or possibly without public internet access at all. This tool makes it easy
+to build and install a resource on the local network which allows the Data Flow deployer to pull the binaries and
+runtime metadata via http.
+
+== Getting Started
+
+The `scdf-app-tool` is a simple Java program built with https://projects.spring.io/spring-shell/[Spring Shell 2.0.x].
+Since it is a Java application,  it can run on Unix, Mac, and Windows. Download the binary archive (zip, tar.gz, tar
+.bz2) from the https://github.com/dturanski/scdf-app-tool/releases/latest[latest release] or build from source and run
+
+```
+$ ./scdf-app-tool
+```
+
+or on Windows
+
+```
+$ .\scdf-app-tool.bat
+```
+
+This will run a REPL Shell to perform various commands.
+
+```
+$./scdf-app-tool
+binder-undefined:>
+```
+NOTE: The prompt indicates that no binder (rabbit, kafka) has been set for stream apps. The stream apps are packaged as
+separate binaries for each supported messaging transport in accordance with Spring Cloud Stream architecture. To
+import stream apps, it is convenient to specify the binder up front rather than as an option for each import command.
+ While it is possible to mix and match binders, typically, users chose one for all stream pipelines.
+
+
+In this intial state, only commands related to stream apps are disabled. Type `help` to see what you can do.
+
+```
+binder-undefined:>help
+AVAILABLE COMMANDS
+
+Binder
+        binder: Set the Binder to use for stream apps.
+
+Built-In Commands
+        clear: Clear the shell screen.
+        exit, quit: Exit the shell.
+        help: Display help about available commands.
+        history: Display or save the history of previously run commands
+        script: Read and execute commands from a file.
+        stacktrace: Display the full stacktrace of the last error.
+
+Download
+      * get stream-apps: Download stream app jars from maven.
+        get task-apps: Download task app jars from maven.
+      * list stream-apps: List stream apps available for download.
+        list task-apps: List task apps available for download.
+
+Repo
+        repo clean: Clean local repository.
+        repo list, repo ls: List local repository.
+        repo rm: Remove entries from local repository.
+
+Commands marked with (*) are currently unavailable.
+Type `help <command>` to learn more.
+```
+
+Once you set the binder (kafka or rabbit), the prompt will change to the selected binder and the stream commands,
+marked with `*` above will be available.
+
+```
+binder-undefined:>binder rabbit
+rabbit:>
+```
+
+TIP: `binder` is alqo Spring property that can be set as a command line argument, e.g., `$./scdf-app-tool
+--binder=rabbit`
+
+
+Note that `kafka` is an alias for `kafka-10`, so you can do this:
+
+```
+rabbit:>binder kafka
+kafka-10:>
+```
+
+Besides, the `binder` command, there are commands related to downloading binaries from Maven and commands related to
+the Local repository. The `Download` commands allow you to select from available binaries using simple pattern
+matching. There are `name` and `type` options for the `get stream-apps` command, each of which can include wildcards.
+If you type `list stream-apps` you get a list of what is available for download. Below is the head of the list.
+
+```
+kafka-10:>list stream-apps
+processor:aggregator
+processor:bridge
+processor:filter
+processor:groovy-filter
+processor:groovy-transform
+processor:header-enricher
+processor:httpclient
+processor:pmml
+processor:python-http
+processor:python-jython
+processor:scriptable-transform
+processor:splitter
+processor:tasklaunchrequest-transform
+processor:tcp-client
+processor:tensorflow
+processor:transform
+processor:twitter-sentiment
+sink:aggregate-counter
+sink:cassandra
+sink:counter
+sink:field-value-counter
+sink:file
+sink:ftp
+sink:gemfire
+sink:gpfdist
+sink:hdfs
+sink:hdfs-dataset
+sink:jdbc
+sink:log
+sink:mongodb
+sink:mqtt
+...
+```
+
+The available apps are configured in a properties file, in this case `config/kafka-10-stream-apps.properties`, this
+command displays the property keys (excluding the associated metadata entries) in the form <type>:<name>.
+
+
+
+
+You can filter by `name` and/or `type`. For instance:
+
+```
+kafka-10:>get stream-apps --name jdbc
+downloading https://repo.spring.io/release/org/springframework/cloud/stream/app/jdbc-sink-kafka-10/1.3.1.RELEASE/jdbc-sink-kafka-10-1.3.1.RELEASE.jar...
+downloading https://repo.spring.io/release/org/springframework/cloud/stream/app/jdbc-sink-kafka-10/1.3.1.RELEASE/jdbc-sink-kafka-10-1.3.1.RELEASE-metadata.jar...
+downloading https://repo.spring.io/release/org/springframework/cloud/stream/app/jdbc-source-kafka-10/1.3.1.RELEASE/jdbc-source-kafka-10-1.3.1.RELEASE.jar...
+downloading https://repo.spring.io/release/org/springframework/cloud/stream/app/jdbc-source-kafka-10/1.3.1.RELEASE/jdbc-source-kafka-10-1.3.1.RELEASE-metadata.jar...
+```
+
+NOTE: You may also edit or comment (`#`) the contents of these files and bulk import everything via `get stream-apps`
+with no parameters.
+
+Now check the current state of the local repo:
+
+```
+kafka-10:>repo list
+sink.jdbc=jdbc-sink-kafka-10-1.3.1.RELEASE.jar
+sink.jdbc.metadata=jdbc-sink-kafka-10-1.3.1.RELEASE-metadata.jar
+source.jdbc=jdbc-source-kafka-10-1.3.1.RELEASE.jar
+source.jdbc.metadata=jdbc-source-kafka-10-1.3.1.RELEASE-metadata.jar
+
+```
+
+As we can see we have downloaded the `jdbc source` and `jdbc sink` apps and metadata which is really useful for
+configuring these apps in Data Flow. But maybe we made a mistake because we really just wanted the sink.
+
+```
+kafka-10:>repo rm  --name jdbc --type sink
+rm jdbc-sink-kafka-10-1.3.1.RELEASE-metadata.jar
+rm jdbc-sink-kafka-10-1.3.1.RELEASE.jar
+kafka-10:>repo list
+source.jdbc=jdbc-source-kafka-10-1.3.1.RELEASE.jar
+source.jdbc.metadata=jdbc-source-kafka-10-1.3.1.RELEASE-metadata.jar
+kafka-10:>
+```
+
+So we can continue this way until we have everything we need for the time being. There are similar commands for tasks:
+
+```
+kafka-10:>list task-apps
+composed-task-runner
+jdbchdfs-local
+spark-client
+spark-cluster
+spark-yarn
+timestamp
+timestamp-batch
+kafka-10:>
+```
+
+== Building and running the app repo
+
+Once the local repo contains everything we will need, we can `quit` or `exit` the
+shell. The repo is conveniently located under link:config/scdf-app-repo[] which is a Spring
+boot project for serving the internal app repositor. To build scdf-app-repo, you need to have JDK 8+ installed.  To
+build and run it locally:
+
+```
+$cd config/scdf-app-repo
+$./mvnw package
+$java -jar target/scdf-app-repo-0.0.1-SNAPSHOT.jar
+```
+
+While it is running, you can test it by retrieving a download jar from another terminal window. For example:
+
+```
+$wget http://localhost:8080/jdbc-source-kafka-10-1.3.1.RELEASE.jar
+```
+
+You would use this URL to register this app in a local Spring Cloud Data Flow server.
+
+
+You can list the contents of the repo at http://localhost:8080/repo:
+
+```
+$curl http://localhost:8080/repo
+```
+
+And bulk import the apps in Spring Cloud Data Flow using the URI http://localhost:8080/import
+
+You can also deploy scdf-app-repo to Pivotal Cloud Foundry, typically the same space in which your Data Flow server
+is running.
+
+NOTE: You will need to rebuild and deploy in order to change the repo contents.
+
+== Custom apps
+
+You may edit the appropriate properties files in the `config` dir to add entries for custom built stream and task
+apps that exist in a different Maven repository, an external site, e.g., github, or the local file system. The entry
+should use an http(s) or file URL for the jar.  e.g.,
+
+```
+sink.my-app=file://Users/me/workspace/my-app/target/my-app-1.0.0.jar
+source.foo=https://github.com/user/repo/blob/master/binaries/foo-v1.1.jar?raw=true
+```
+
+NOTE: Directly copying jars to the target directory is strongly discouraged since the tool maintains metadata which will
+cause some Repo and Data Flow functions to fail.
+
+== Building SCDF app tool from source:
+
+```
+$./mvnw clean package
+```
+This will create the jar file along with binary distributions of the app as zip, tar.gz, and tar.bz2 in the `dist`
+directory. You can run the app as any Spring Boot application,
+
+```
+ $java -jar target/scdf-app-tool-0.0.1-SNAPSHOT.jar
+```
+
+or
+
+```
+$./scdf-app-tool
+```

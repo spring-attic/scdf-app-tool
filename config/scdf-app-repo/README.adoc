@@ -1,0 +1,38 @@
+= Spring Cloud Data Flow App Repository
+
+== What is this?
+This is the source for a Spring Boot web application to serve as a web repository for Spring Cloud Data Flow
+application binaries used to build stream and task applications. This application may be run locally or deployed along
+side the Spring Cloud Data Flow Server to enable registration and deployment of component apps without requiring an
+external Maven repository.
+
+== Why would you use this?
+The pre-built jars are updated in conjunction with Spring Cloud Data Flow releases and published to the
+https://repo.spring.io[Spring Maven Repository]. While the Spring Cloud deployers used by Data Flow load jars directly
+from this repository by default, Data Flow users frequently must deploy these apps to an environment that is behind a
+firewall, either requiring a Maven proxy or possibly without public internet access at all. This tool makes it easy
+to build and install a resource on the local network which allows the Data Flow deployer to pull the binaries and
+runtime metadata via http.
+
+== Getting Started
+
+Use the parent `scdf-app-tool` to download available apps into `src/main/resources/static`. Then build the executable
+ jar application with Maven
+
+```
+$cd config/scdf-app-repo
+$./mvnw package
+```
+
+You can run it locally:
+
+```
+$java -jar target/scdf-app-repo-0.0.1-SNAPSHOT.jar
+```
+
+Or deploy it to a supported cloud platform.
+
+The hosted jars and metadata are downloaded using the root URL, e.g., `http://localhost:8080/foo.jar`.
+
+* You can view a list of hosted artifacts at the `/repo` endpoint.
+* To bulk register all of the apps to Spring Cloud Data Flow use the `/import` endpoint
