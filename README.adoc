@@ -17,7 +17,7 @@ runtime metadata via http.
 
 The `scdf-app-tool` is a simple Java program built with https://projects.spring.io/spring-shell/[Spring Shell 2.0.x].
 Since it is a Java application,  it can run on Unix, Mac, and Windows. Download the binary archive (zip, tar.gz, tar
-.bz2) from the https://github.com/dturanski/scdf-app-tool/releases/latest[latest release] or build from source and run
+.bz2) from the https://github.com/spring-cloud-stream-app-starters/scdf-app-repo/releases/latest[latest release] or build from source and run
 
 ```
 $ ./scdf-app-tool
