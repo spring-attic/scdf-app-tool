@@ -23,8 +23,11 @@ import static org.springframework.cloud.dataflow.apptool.Utils.message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.dataflow.apptool.AppInfo;
+import org.springframework.cloud.dataflow.apptool.AppResource;
 import org.springframework.cloud.dataflow.apptool.ComponentTypeValidator;
+import org.springframework.cloud.dataflow.apptool.CustomAppResource;
 import org.springframework.cloud.dataflow.apptool.Utils;
+import org.springframework.core.io.UrlResource;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
@@ -47,6 +50,7 @@ public class Repo {
 	private static final String REPO_LIST = "repo list";
 	private static final String REPO_LS = "repo ls";
 	private static final String REPO_RM = "repo rm";
+	private static final String REPO_ADD = "repo add";
 	private static final String REPO_CLEAN = "repo clean";
 
 	@Autowired
@@ -54,6 +58,8 @@ public class Repo {
 
 	@Value("${local.repo.directory}")
 	private String repoDirectory;
+
+	private AppResourceDownloader appResourceDownloader = new AppResourceDownloader(repoDirectory, appInfo);
 
 	@ShellMethod(value = "List local repository.", key = { REPO_LIST, REPO_LS })
 	public void list() {
@@ -104,6 +110,28 @@ public class Repo {
 				message(e.getMessage());
 			}
 		});
+	}
+
+	@ShellMethod(value = "Add to local repository from a URL.", key = REPO_ADD)
+	public void add(@ShellOption({ "-n", "--name" }) String name,
+		@ShellOption(value = { "-t", "--type" }) String type,
+		@ShellOption(value = {"--url"} , help = "The resource URL") String url,
+		@ShellOption(value= {"--metadata"}, help = "The metadata URL(optional)") String metadataUrl) {
+
+		if (!ComponentTypeValidator.isValidAppType(type)) {
+			return;
+		}
+
+		CustomAppResource resource = new CustomAppResource(type, name, url);
+		resource.setMetadataUrl(metadataUrl);
+		appResourceDownloader.accept(resource);
+		AppResource metadataResource = resource.getMetadataResource();
+		if (metadataResource != null) {
+			appResourceDownloader.accept(metadataResource);
+		}
+
+
+
 	}
 
 	private boolean ensureSupportedAppType(String type) {

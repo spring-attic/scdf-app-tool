@@ -16,9 +16,12 @@
 
 package org.springframework.cloud.dataflow.apptool.command;
 
-import static org.springframework.cloud.dataflow.apptool.AppResource.WILDCARD;
-import static org.springframework.cloud.dataflow.apptool.Utils.fatal;
-import static org.springframework.cloud.dataflow.apptool.Utils.loadPropertiesFile;
+import java.nio.file.Paths;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
+import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,19 +38,9 @@ import org.springframework.shell.standard.ShellMethodAvailability;
 import org.springframework.shell.standard.ShellOption;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
+import static org.springframework.cloud.dataflow.apptool.AppResource.WILDCARD;
+import static org.springframework.cloud.dataflow.apptool.Utils.fatal;
+import static org.springframework.cloud.dataflow.apptool.Utils.loadPropertiesFile;
 
 /**
  * This class implements the shell commands related to downloading artifacts listed the config properties files.
@@ -174,73 +167,9 @@ public class Download implements ApplicationListener<BinderUpdateEvent> {
 		this.binder = binderUpdateEvent.getBinder();
 	}
 
-	/**
-	 *
-	 */
-	class AppResourceDownloader implements Consumer<AppResource> {
-
-		private final String directory;
-
-		AppResourceDownloader(String directory) {
-			ensureWritableDirectory(directory);
-			this.directory = directory;
-		}
-
-		@Override
-		public void accept(AppResource appResource) {
-			URL website = null;
-			try {
-
-				System.out.println(String.format("downloading %s...", appResource.getUrl()));
-				downloadAppResource(appResource, directory);
-				appInfo.add(appResource);
-
-			}
-			catch (Exception e) {
-				fatal(e.getMessage());
-			}
-		}
-
-		private void downloadAppResource(AppResource appResource, String directory) throws IOException {
-			ReadableByteChannel rbc = Channels.newChannel(appResource.getUrl().openStream());
-			FileOutputStream fos = new FileOutputStream(Paths.get(directory, appResource.getFilename()).toString());
-			fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-		}
-
-		private File ensureWritableDirectory(String directory) {
-			Path path = Paths.get(directory);
-
-			File outputDirectory = path.toFile();
-
-			if (!Files.exists(path)) {
-				try {
-					outputDirectory = Files.createDirectory(path).toFile();
-
-				}
-
-				catch (IOException e) {
-					fatal(e.getMessage());
-				}
-			}
-
-			if (!outputDirectory.isDirectory()) {
-				outputDirectory.delete();
-				fatal(String.format("%s is not a directory", path.toString()));
-			}
-
-			if (!Files.isWritable(path)) {
-				outputDirectory.delete();
-				fatal(String.format("%s is not writable", path.toString()));
-			}
-
-			return outputDirectory;
-		}
-
-	}
-
 	@PostConstruct
 	public void init() {
-		this.appResourceConsumer = new AppResourceDownloader(repoDirectory);
+		this.appResourceConsumer = new AppResourceDownloader(repoDirectory, appInfo);
 		if (StringUtils.hasText(this.binder)) {
 			this.binder = BinderResolver.resolveBinder(binder);
 			if (!StringUtils.hasText(binder)) {
