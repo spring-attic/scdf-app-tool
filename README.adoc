@@ -60,14 +60,18 @@ Built-In Commands
 
 Download
       * get stream-apps: Download stream app jars from maven.
-        get task-apps: Download task app jars from maven.
+        get task-apps: Download task app jars from maven or given URL.
       * list stream-apps: List stream apps available for download.
         list task-apps: List task apps available for download.
 
 Repo
+        repo add: Add to local repository from a URL.
         repo clean: Clean local repository.
         repo list, repo ls: List local repository.
         repo rm: Remove entries from local repository.
+
+Commands marked with (*) are currently unavailable.
+Type `help <command>` to learn more.
 
 Commands marked with (*) are currently unavailable.
 Type `help <command>` to learn more.

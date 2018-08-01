@@ -98,7 +98,7 @@ public class Repo {
 		List<String> entries = appInfo.findByNameAndType(name, type);
 
 		if (CollectionUtils.isEmpty(entries)) {
-			message(String.format("No entries found for name %s and type %", name, type));
+			message(String.format("No entries found for name %s and type %s", name, type));
 			return;
 		}
 
