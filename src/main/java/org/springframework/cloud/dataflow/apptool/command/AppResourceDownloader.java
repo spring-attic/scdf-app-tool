@@ -35,6 +35,7 @@ import org.springframework.cloud.dataflow.apptool.AppInfo;
 import org.springframework.cloud.dataflow.apptool.AppResource;
 
 import static org.springframework.cloud.dataflow.apptool.Utils.fatal;
+import static org.springframework.cloud.dataflow.apptool.Utils.message;
 
 /**
  *
@@ -62,7 +63,7 @@ class AppResourceDownloader implements Consumer<AppResource> {
 
 		}
 		catch (Exception e) {
-			fatal(e.getMessage());
+			message(e.getMessage());
 		}
 	}
 

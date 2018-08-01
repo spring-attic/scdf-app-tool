@@ -32,12 +32,15 @@ import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
+import javax.annotation.PostConstruct;
 
 /**
  * @author David Turanski
@@ -59,7 +62,7 @@ public class Repo {
 	@Value("${local.repo.directory}")
 	private String repoDirectory;
 
-	private AppResourceDownloader appResourceDownloader = new AppResourceDownloader(repoDirectory, appInfo);
+	private AppResourceDownloader appResourceDownloader;
 
 	@ShellMethod(value = "List local repository.", key = { REPO_LIST, REPO_LS })
 	public void list() {
@@ -116,22 +119,27 @@ public class Repo {
 	public void add(@ShellOption({ "-n", "--name" }) String name,
 		@ShellOption(value = { "-t", "--type" }) String type,
 		@ShellOption(value = {"--url"} , help = "The resource URL") String url,
-		@ShellOption(value= {"--metadata"}, help = "The metadata URL(optional)") String metadataUrl) {
+		@ShellOption(value= {"--metadata"}, defaultValue= "", help = "The metadata URL(optional)") String metadataUrl) {
 
 		if (!ComponentTypeValidator.isValidAppType(type)) {
 			return;
 		}
 
 		CustomAppResource resource = new CustomAppResource(type, name, url);
-		resource.setMetadataUrl(metadataUrl);
+		if (StringUtils.hasText(metadataUrl)) {
+			resource.setMetadataUrl(metadataUrl);
+		}
+
 		appResourceDownloader.accept(resource);
 		AppResource metadataResource = resource.getMetadataResource();
 		if (metadataResource != null) {
 			appResourceDownloader.accept(metadataResource);
 		}
+	}
 
-
-
+	@PostConstruct
+	public void init() {
+		this.appResourceDownloader = new AppResourceDownloader(repoDirectory, appInfo);
 	}
 
 	private boolean ensureSupportedAppType(String type) {
