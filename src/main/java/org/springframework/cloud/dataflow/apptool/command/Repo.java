@@ -23,18 +23,24 @@ import static org.springframework.cloud.dataflow.apptool.Utils.message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.dataflow.apptool.AppInfo;
+import org.springframework.cloud.dataflow.apptool.AppResource;
 import org.springframework.cloud.dataflow.apptool.ComponentTypeValidator;
+import org.springframework.cloud.dataflow.apptool.CustomAppResource;
 import org.springframework.cloud.dataflow.apptool.Utils;
+import org.springframework.core.io.UrlResource;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
+import javax.annotation.PostConstruct;
 
 /**
  * @author David Turanski
@@ -47,6 +53,7 @@ public class Repo {
 	private static final String REPO_LIST = "repo list";
 	private static final String REPO_LS = "repo ls";
 	private static final String REPO_RM = "repo rm";
+	private static final String REPO_ADD = "repo add";
 	private static final String REPO_CLEAN = "repo clean";
 
 	@Autowired
@@ -54,6 +61,8 @@ public class Repo {
 
 	@Value("${local.repo.directory}")
 	private String repoDirectory;
+
+	private AppResourceDownloader appResourceDownloader;
 
 	@ShellMethod(value = "List local repository.", key = { REPO_LIST, REPO_LS })
 	public void list() {
@@ -89,7 +98,7 @@ public class Repo {
 		List<String> entries = appInfo.findByNameAndType(name, type);
 
 		if (CollectionUtils.isEmpty(entries)) {
-			message(String.format("No entries found for name %s and type %", name, type));
+			message(String.format("No entries found for name %s and type %s", name, type));
 			return;
 		}
 
@@ -104,6 +113,33 @@ public class Repo {
 				message(e.getMessage());
 			}
 		});
+	}
+
+	@ShellMethod(value = "Add to local repository from a URL.", key = REPO_ADD)
+	public void add(@ShellOption({ "-n", "--name" }) String name,
+		@ShellOption(value = { "-t", "--type" }) String type,
+		@ShellOption(value = {"--url"} , help = "The resource URL") String url,
+		@ShellOption(value= {"--metadata"}, defaultValue= "", help = "The metadata URL(optional)") String metadataUrl) {
+
+		if (!ComponentTypeValidator.isValidAppType(type)) {
+			return;
+		}
+
+		CustomAppResource resource = new CustomAppResource(type, name, url);
+		if (StringUtils.hasText(metadataUrl)) {
+			resource.setMetadataUrl(metadataUrl);
+		}
+
+		appResourceDownloader.accept(resource);
+		AppResource metadataResource = resource.getMetadataResource();
+		if (metadataResource != null) {
+			appResourceDownloader.accept(metadataResource);
+		}
+	}
+
+	@PostConstruct
+	public void init() {
+		this.appResourceDownloader = new AppResourceDownloader(repoDirectory, appInfo);
 	}
 
 	private boolean ensureSupportedAppType(String type) {

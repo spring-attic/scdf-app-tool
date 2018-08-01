@@ -60,14 +60,18 @@ Built-In Commands
 
 Download
       * get stream-apps: Download stream app jars from maven.
-        get task-apps: Download task app jars from maven.
+        get task-apps: Download task app jars from maven or given URL.
       * list stream-apps: List stream apps available for download.
         list task-apps: List task apps available for download.
 
 Repo
+        repo add: Add to local repository from a URL.
         repo clean: Clean local repository.
         repo list, repo ls: List local repository.
         repo rm: Remove entries from local repository.
+
+Commands marked with (*) are currently unavailable.
+Type `help <command>` to learn more.
 
 Commands marked with (*) are currently unavailable.
 Type `help <command>` to learn more.
@@ -227,9 +231,23 @@ NOTE: You will need to rebuild and deploy in order to change the repo contents.
 
 == Custom apps
 
-You may edit the appropriate properties files in the `config` dir to add entries for custom built stream and task
-apps that exist in a different Maven repository, an external site, e.g., github, or the local file system. The entry
-should use an http(s) or file URL for the jar.  e.g.,
+Use `repo add` to add a locally built jar to the repo from a file URL (or any URL). For example:
+
+```
+binder-undefined:>repo add --name my-app --type processor --url file:///Users/me/workspace/my-app/target/my-app-0.0
+.1-SNAPSHOT.jar
+
+binder-undefined:>repo add --type source --name foo --url https://github.com/user/repo/blob/master/binaries/foo-v1.1
+.jar?raw=true
+```
+
+NOTE: The repo add command will by default look for an associated metadata jar using the normal naming convention
+(e,g, file:///Users/me/workspace/my-app/target/my-app-0.0.1-SNAPSHOT-metadata.jar). You may also use the `--metadata`
+ option to provide the location of the metadata resource).
+
+Alternately, You may edit the appropriate properties files in the `config` dir to add entries for custom built stream
+and task apps that exist in a different Maven repository, an external site, e.g., github, or the local file system.
+The entry should use an http(s) or file URL for the jar.  e.g.,
 
 ```
 sink.my-app=file://Users/me/workspace/my-app/target/my-app-1.0.0.jar

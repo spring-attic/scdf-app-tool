@@ -42,7 +42,7 @@ public class AppResource {
 	private final String filename;
 
 	/**
-	 * @param key          '<name>:<type>:?metadata'
+	 * @param key          '<name>.<type>.?metadata'
 	 * @param value        the URL of the artifact, typically using the 'maven://' schema but may be an actual URL.
 	 * @param mavenRepoUrl The base URL of the external maven repository containing the artifacts. Used to generate
 	 *                     the resource actual URL
