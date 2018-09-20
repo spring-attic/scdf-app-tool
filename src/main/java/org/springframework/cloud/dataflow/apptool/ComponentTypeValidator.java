@@ -30,7 +30,7 @@ import java.util.List;
  **/
 public abstract class ComponentTypeValidator {
 	private final static List<String> SUPPORTED_STREAM_APP_TYPES = Arrays.asList("source", "processor", "sink");
-	private final static List<String> SUPPORTED_APP_TYPES = Arrays.asList("source", "processor", "sink","task");
+	private final static List<String> SUPPORTED_APP_TYPES = Arrays.asList("source", "processor", "sink","task","app");
 
 	public static boolean isValidStreamAppType(String type) {
 		if (!SUPPORTED_STREAM_APP_TYPES.contains(type)) {
