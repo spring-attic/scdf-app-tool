@@ -25,7 +25,7 @@ import org.junit.Test;
  **/
 public class AppResourceTests {
 
-	private String mavenRepoUrl = "http://my.repo";
+	private String mavenRepoUrl = "https://my.repo";
 	private String jar = "maven://org.springframework.cloud.stream.app:cassandra-sink-rabbit:1.3.1.RELEASE";
 	private String metadata = "maven://org.springframework.cloud.stream"
 		+ ".app:cassandra-sink-rabbit:jar:metadata:1.3.1.RELEASE";
@@ -35,7 +35,7 @@ public class AppResourceTests {
 
 		AppResource appResource = new AppResource("sink.cassandra", jar,mavenRepoUrl);
 
-		assertThat(appResource.getUrl().toString()).isEqualTo("http://my.repo/org/springframework/cloud/stream"
+		assertThat(appResource.getUrl().toString()).isEqualTo("https://my.repo/org/springframework/cloud/stream"
 			+ "/app/cassandra-sink-rabbit/1.3.1.RELEASE/cassandra-sink-rabbit-1.3.1.RELEASE.jar");
 
 		assertThat(appResource.getComponentType()).isEqualTo("sink");
@@ -48,7 +48,7 @@ public class AppResourceTests {
 
 		AppResource appResource = new AppResource("sink.cassandra.metadata", metadata,mavenRepoUrl);
 
-		assertThat(appResource.getUrl().toString()).isEqualTo("http://my.repo/org/springframework/cloud/stream"
+		assertThat(appResource.getUrl().toString()).isEqualTo("https://my.repo/org/springframework/cloud/stream"
 			+ "/app/cassandra-sink-rabbit/1.3.1.RELEASE/cassandra-sink-rabbit-1.3.1.RELEASE-metadata.jar");
 
 		assertThat(appResource.getComponentType()).isEqualTo("sink");
