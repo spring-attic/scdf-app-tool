@@ -31,7 +31,7 @@ import java.util.List;
  **/
 public abstract class BinderResolver {
 
-	final static List<String> SUPPORTED_BINDERS = Arrays.asList("kafka", "kafka-10", "rabbit");
+	final static List<String> SUPPORTED_BINDERS = Arrays.asList("kafka", "rabbit");
 
 	public static String resolveBinder(String binder) {
 		String b = binder.toLowerCase();
@@ -41,6 +41,6 @@ public abstract class BinderResolver {
 			return null;
 		}
 
-		return b.equals("kafka") ? "kafka-10" : b;
+		return b;
 	}
 }
