@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -25,13 +25,13 @@ import java.util.List;
 
 /**
  *
- * Utility for validating the binder name, and resolving aliases, e.g., "kafka" -> "kafka-10"
+ * Utility for validating the binder name, and resolving aliases, e.g., "rabbitmq" -> "rabbit"
  *
  * @author David Turanski
  **/
 public abstract class BinderResolver {
 
-	final static List<String> SUPPORTED_BINDERS = Arrays.asList("kafka", "rabbit");
+	final static List<String> SUPPORTED_BINDERS = Arrays.asList("kafka", "rabbit","rabbitmq");
 
 	public static String resolveBinder(String binder) {
 		String b = binder.toLowerCase();
@@ -41,6 +41,9 @@ public abstract class BinderResolver {
 			return null;
 		}
 
+		if (b.equalsIgnoreCase("rabbitmq")) {
+			b = "rabbit";
+		}
 		return b;
 	}
 }
